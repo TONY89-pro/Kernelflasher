@@ -394,4 +394,187 @@ fun ConsoleLogsScreen() {
     val listState = rememberLazyListState()
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("Historial Complete = "recovery" }
+                                ModeChip("Vendor_boot", selectedMode == "vendor_boot", Modifier.weight(1f)) { selectedMode = "vendor_boot" }
+                            }
+
+                            OutlinedButton(
+                                onClick = { filePicker.launch(arrayOf("*/*")) },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text(if (fileName.isNotEmpty()) fileName else "2. Seleccionar Archivo (.zip o .img)", color = Color.White)
+                            }
+
+                            Button(
+                                onClick = {
+                                    val u = selectedUri ?: return@Button
+                                    busy = true
+                                    SharedConsole.add("=== INICIANDO FLASHEO OTG ===")
+                                    scope.launch(Dispatchers.IO) {
+                                        Flasher.flashOtgFile(ctx, u, selectedMode) { line ->
+                                            scope.launch(Dispatchers.Main) { SharedConsole.add(line) }
+                                        }
+                                        withContext(Dispatchers.Main) { busy = false }
+                                    }
+                                },
+                                enabled = selectedUri != null && !busy,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0D9488)),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Text(if (busy) "Flasheando al otro celular..." else "⚡ Flashear al Dispositivo OTG", fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        item {
+            DashboardCard(borderColor = Color(0xFF3F2329)) {
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().clickable { expandRebootCard = !expandRebootCard },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier.size(42.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFF2D161C)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Refresh, contentDescription = null, tint = Color(0xFFF87171))
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Reboot Options (OTG)", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            Text("System | Bootloader | Recovery | FastbootD", color = Color(0xFF8A99AD), fontSize = 11.sp)
+                        }
+                        Icon(
+                            imageVector = if (expandRebootCard) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                            contentDescription = null, tint = Color.Gray
+                        )
+                    }
+
+                    AnimatedVisibility(visible = expandRebootCard) {
+                        Column(modifier = Modifier.padding(top = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                RebootBtn("System", Modifier.weight(1f)) {
+                                    scope.launch(Dispatchers.IO) { Flasher.runOtgCommand(ctx, "fastboot", listOf("reboot")) { SharedConsole.add(it) } }
+                                }
+                                RebootBtn("Bootloader", Modifier.weight(1f)) {
+                                    scope.launch(Dispatchers.IO) { Flasher.runOtgCommand(ctx, "fastboot", listOf("reboot-bootloader")) { SharedConsole.add(it) } }
+                                }
+                            }
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                RebootBtn("Recovery", Modifier.weight(1f)) {
+                                    scope.launch(Dispatchers.IO) { Flasher.runOtgCommand(ctx, "fastboot", listOf("reboot", "recovery")) { SharedConsole.add(it) } }
+                                }
+                                RebootBtn("FastbootD", Modifier.weight(1f)) {
+                                    scope.launch(Dispatchers.IO) { Flasher.runOtgCommand(ctx, "fastboot", listOf("reboot", "fastboot")) { SharedConsole.add(it) } }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (SharedConsole.logs.isNotEmpty()) {
+            item {
+                DashboardCard(borderColor = Color(0xFF1E293B)) {
+                    Column {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Terminal en Vivo", color = Color(0xFF38BDF8), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text("Limpiar", color = Color.Gray, fontSize = 11.sp, modifier = Modifier.clickable { SharedConsole.clear() })
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        SharedConsole.logs.takeLast(6).forEach { line ->
+                            Text(line, fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = Color(0xFF4ADE80))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun LocalKernelScreen() {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var root by remember { mutableStateOf<Boolean?>(null) }
+    var uri by remember { mutableStateOf<Uri?>(null) }
+    var name by remember { mutableStateOf("") }
+    var backup by remember { mutableStateOf(true) }
+    var busy by remember { mutableStateOf(false) }
+
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { u ->
+        if (u != null) { uri = u; name = Flasher.displayName(ctx, u) }
+    }
+    LaunchedEffect(Unit) { root = withContext(Dispatchers.IO) { Flasher.hasRoot() } }
+
+    Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Text("Local Kernel Flasher (Este Teléfono)", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        DashboardCard(borderColor = if (root == true) Color(0xFF22C55E) else Color(0xFFEF4444)) {
+            Text(if (root == true) "✅ Acceso Root Activo en este teléfono" else "❌ Se requiere Root para flasheo local", color = Color.White, fontSize = 13.sp)
+        }
+        DashboardCard {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedButton(onClick = { picker.launch(arrayOf("application/zip")) }, modifier = Modifier.fillMaxWidth()) {
+                    Text(if (name.isNotEmpty()) name else "Elegir AnyKernel3 ZIP", color = Color.White)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Switch(checked = backup, onCheckedChange = { backup = it })
+                    Spacer(Modifier.width(8.dp))
+                    Text("Backup automático de boot.img", color = Color.White, fontSize = 13.sp)
+                }
+                Button(
+                    onClick = {
+                        busy = true
+                        scope.launch(Dispatchers.IO) {
+                            try { Flasher.flash(ctx, uri!!, backup) { SharedConsole.add(it) } }
+                            catch (e: Exception) { SharedConsole.add("[ERROR] ${e.message}") }
+                            withContext(Dispatchers.Main) { busy = false }
+                        }
+                    },
+                    enabled = root == true && uri != null && !busy,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(if (busy) "Flasheando..." else "Flashear Kernel Local")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ToolsScreen() {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Diagnóstico OTG (ADB / Fastboot)", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        Button(
+            onClick = { scope.launch(Dispatchers.IO) { Flasher.runOtgCommand(ctx, "fastboot", listOf("devices")) { SharedConsole.add(it) } } },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text("Verificar Fastboot Devices") }
+
+        Button(
+            onClick = { scope.launch(Dispatchers.IO) { Flasher.runOtgCommand(ctx, "adb", listOf("devices")) { SharedConsole.add(it) } } },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text("Verificar ADB Devices") }
+
+        Button(
+            onClick = { scope.launch(Dispatchers.IO) { Flasher.runOtgCommand(ctx, "fastboot", listOf("getvar", "all")) { SharedConsole.add(it) } } },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text("Leer Variables del Dispositivo (getvar all)") }
+    }
+}
+
+@Composable
+fun ConsoleLogsScreen() {
+    val listState = rememberLazyListState()
+    Column(Modifier.fillMaxSize().padding(16.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text("Historial Complet
