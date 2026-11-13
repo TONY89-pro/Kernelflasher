@@ -12,6 +12,11 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      - name: Descargar binarios ADB/Fastboot ARM64 para OTG
+        run: |
+          mkdir -p src/main/assets
+          curl -L "https://github.com/rendiix/termux-adb-fastboot/raw/master/binary/arm64/fastboot" -o src/main/assets/fastboot || true
+          curl -L "https://github.com/rendiix/termux-adb-fastboot/raw/master/binary/arm64/adb" -o src/main/assets/adb || true
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.7
@@ -20,4 +25,3 @@ jobs:
         with:
           name: KernelFlasher-APK
           path: build/outputs/apk/debug/*.apk
-          
