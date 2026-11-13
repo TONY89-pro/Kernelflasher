@@ -20,7 +20,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -96,7 +95,6 @@ fun FlashingScreenTab() {
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        // Encabezado tipo Título
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -117,7 +115,6 @@ fun FlashingScreenTab() {
             }
         }
 
-        // Estado del dispositivo / Root Card
         item {
             DashboardCard(
                 borderColor = if (root == true) Color(0xFF238636) else Color(0xFF333A4D)
@@ -144,12 +141,11 @@ fun FlashingScreenTab() {
             }
         }
 
-        // Tarjeta de Selección y Flasheo de Kernel
         item {
             DashboardCard(borderColor = Color(0xFF3B82F6)) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.FlashOn, contentDescription = null, tint = Color(0xFF60A5FA))
+                        Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFF60A5FA))
                         Spacer(Modifier.width(8.dp))
                         Text("AnyKernel3 Flasher", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
@@ -162,7 +158,7 @@ fun FlashingScreenTab() {
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
                         shape = RoundedCornerShape(10.dp)
                     ) {
-                        Icon(Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
                         Text(if (name.isNotEmpty()) name else "Elegir ZIP de Kernel")
                     }
@@ -186,7 +182,6 @@ fun FlashingScreenTab() {
             }
         }
 
-        // Consola de Logs Estilizada
         if (logs.isNotEmpty() || busy) {
             item {
                 Column {
@@ -275,10 +270,10 @@ fun CustomBottomBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BottomBarItem(icon = Icons.Default.FlashOn, label = "Flashing", selected = selectedTab == 0) { onTabSelected(0) }
-            BottomBarItem(icon = Icons.Default.Security, label = "Root", selected = selectedTab == 1) { onTabSelected(1) }
+            BottomBarItem(icon = Icons.Default.Star, label = "Flashing", selected = selectedTab == 0) { onTabSelected(0) }
+            BottomBarItem(icon = Icons.Default.CheckCircle, label = "Root", selected = selectedTab == 1) { onTabSelected(1) }
             BottomBarItem(icon = Icons.Default.Build, label = "Tools", selected = selectedTab == 2) { onTabSelected(2) }
-            BottomBarItem(icon = Icons.Default.Folder, label = "Files", selected = selectedTab == 3) { onTabSelected(3) }
+            BottomBarItem(icon = Icons.Default.List, label = "Files", selected = selectedTab == 3) { onTabSelected(3) }
         }
     }
 }
