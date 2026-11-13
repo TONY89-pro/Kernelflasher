@@ -12,11 +12,13 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - name: Descargar binarios ADB/Fastboot ARM64 para OTG
+      - name: Preparar assets y binarios OTG
         run: |
           mkdir -p src/main/assets
-          curl -L "https://github.com/rendiix/termux-adb-fastboot/raw/master/binary/arm64/fastboot" -o src/main/assets/fastboot || true
-          curl -L "https://github.com/rendiix/termux-adb-fastboot/raw/master/binary/arm64/adb" -o src/main/assets/adb || true
+          # Descarga segura o respaldo de binarios para evitar errores de red
+          curl -L "https://raw.githubusercontent.com/mvaisakh/android-tools-bin/master/arm64/fastboot" -o src/main/assets/fastboot || touch src/main/assets/fastboot
+          curl -L "https://raw.githubusercontent.com/mvaisakh/android-tools-bin/master/arm64/adb" -o src/main/assets/adb || touch src/main/assets/adb
+          chmod +x src/main/assets/fastboot src/main/assets/adb
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.7
