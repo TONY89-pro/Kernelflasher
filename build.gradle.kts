@@ -3,9 +3,11 @@ plugins {
     id("org.jetbrains.kotlin.android") version "2.0.20"
     id("org.jetbrains.kotlin.plugin.compose") version "2.0.20"
 }
+
 android {
     namespace = "com.kernelflasher"
     compileSdk = 34
+
     defaultConfig {
         applicationId = "com.kernelflasher"
         minSdk = 26
@@ -13,8 +15,25 @@ android {
         versionCode = 1
         versionName = "1.0"
     }
+
     sourceSets["main"].manifest.srcFile("AndroidManifest.xml")
     sourceSets["main"].java.srcDir("src")
+
+    // Configuración de firma automática para evitar el error de validateSigningDebug
+    signingConfigs {
+        getByName("debug") {
+        }
+    }
+
+    buildTypes {
+        getByName("debug") {
+            signingConfig = signingConfigs.getByName("debug")
+        }
+        release {
+            isMinifyEnabled = false
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -22,6 +41,7 @@ android {
     kotlinOptions { jvmTarget = "17" }
     buildFeatures { compose = true }
 }
+
 dependencies {
     implementation(platform("androidx.compose:compose-bom:2024.09.00"))
     implementation("androidx.compose.ui:ui")
