@@ -19,21 +19,6 @@ android {
     sourceSets["main"].manifest.srcFile("AndroidManifest.xml")
     sourceSets["main"].java.srcDir("src")
 
-    // Configuración de firma automática para evitar el error de validateSigningDebug
-    signingConfigs {
-        getByName("debug") {
-        }
-    }
-
-    buildTypes {
-        getByName("debug") {
-            signingConfig = signingConfigs.getByName("debug")
-        }
-        release {
-            isMinifyEnabled = false
-        }
-    }
-
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
